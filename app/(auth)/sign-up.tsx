@@ -1,6 +1,6 @@
 import { useAuth, useSignUp } from "@clerk/expo";
 import { type Href, Link, useRouter } from "expo-router";
-import React from "react";
+import React, { useEffect } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
 export default function Page() {
@@ -11,6 +11,17 @@ export default function Page() {
   const [emailAddress, setEmailAddress] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [code, setCode] = React.useState("");
+
+  useEffect(() => {
+    if (signUp.status !== "missing_requirements") {
+      signUp.reset();
+    }
+  }, []);
+
+  // ❌ AFTER hooks → safe
+  if (signUp.status === "complete" || isSignedIn) {
+    return null;
+  }
 
   const handleSubmit = async () => {
     const { error } = await signUp.password({
@@ -50,10 +61,6 @@ export default function Page() {
       console.error("Sign-up attempt not complete:", signUp);
     }
   };
-
-  if (signUp.status === "complete" || isSignedIn) {
-    return null;
-  }
 
   if (
     signUp.status === "missing_requirements" &&
