@@ -19,31 +19,62 @@
 //   );
 // }
 
-import { ClerkLoaded, ClerkLoading, ClerkProvider } from "@clerk/expo";
-import { tokenCache } from "@clerk/expo/token-cache";
-import { Stack } from "expo-router";
+// import { Stack } from "expo-router";
+
+// export default function RootLayout() {
+//   return <Stack screenOptions={{ headerShown: false }} />;
+// }
+
+import * as SecureStore from "expo-secure-store";
+import { useColorScheme } from "nativewind";
 import { ActivityIndicator, View } from "react-native";
+
+import { ClerkLoaded, ClerkLoading, ClerkProvider } from "@clerk/expo";
+import {
+  DarkTheme,
+  DefaultTheme,
+  ThemeProvider,
+} from "@react-navigation/native";
+import { Stack } from "expo-router";
+import { useEffect } from "react";
 import "./global.css";
 
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
 
+const tokenCache = {
+  async getToken(key: string) {
+    return SecureStore.getItemAsync(key);
+  },
+  async saveToken(key: string, value: string) {
+    return SecureStore.setItemAsync(key, value);
+  },
+};
+
 export default function RootLayout() {
-  console.log("CLERK KEY:", publishableKey);
+  // console.log("CLERK KEY:", publishableKey);
+  const { colorScheme } = useColorScheme();
+
+  useEffect(() => {
+    console.log("Forcing dark mode check...");
+  }, [colorScheme]);
+  console.log("Current Theme:", colorScheme);
   return (
     <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
-      {/* 👇 SHOW LOADER WHILE CLERK INIT */}
-      <ClerkLoading>
-        <View
-          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
-        >
-          <ActivityIndicator size="large" />
-        </View>
-      </ClerkLoading>
+      <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+        {/* 👇 SHOW LOADER WHILE CLERK INIT */}
+        <ClerkLoading>
+          <View
+            style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+          >
+            <ActivityIndicator size="large" />
+          </View>
+        </ClerkLoading>
 
-      {/* 👇 APP ONLY LOADS AFTER CLERK READY */}
-      <ClerkLoaded>
-        <Stack screenOptions={{ headerShown: false }} />
-      </ClerkLoaded>
+        {/* 👇 APP ONLY LOADS AFTER CLERK READY */}
+        <ClerkLoaded>
+          <Stack screenOptions={{ headerShown: false }} />
+        </ClerkLoaded>
+      </ThemeProvider>
     </ClerkProvider>
   );
 }
